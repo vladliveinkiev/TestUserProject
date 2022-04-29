@@ -43,7 +43,6 @@ namespace TestUserProject.Controllers
 
             if (user != null && await _userManager.CheckPasswordAsync(user, model.Password))
             {
-
                 // generation of JWT token
                 var authClaims = new List<Claim>
                 {

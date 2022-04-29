@@ -1,6 +1,7 @@
 ﻿using RabbitMQ.Client;
 using System.Text;
 using Microsoft.Extensions.Configuration;
+using System;
 
 namespace TestUserProject.Models
 {
@@ -15,24 +16,32 @@ namespace TestUserProject.Models
 
         public void SendMessage(string message)
         {
-            var connectionstring = _configuration.GetConnectionString("RabbitMq");
-            var factory = new ConnectionFactory() { Uri = new System.Uri(connectionstring), UserName ="admin", Password= "bPueSsZvU5hexP4J" };
-            factory.Ssl.Enabled = true;
-            using (var connection = factory.CreateConnection())
-            using (var channel = connection.CreateModel())
+            try
             {
-                channel.QueueDeclare(queue: "CommandQueue",
-                               durable: false,
-                               exclusive: false,
-                               autoDelete: false,
-                               arguments: null);
+                var connectionstring = _configuration.GetConnectionString("RabbitMq");
+                var factory = new ConnectionFactory() { Uri = new System.Uri(connectionstring), UserName = "admin", Password = "bPueSsZvU5hexP4J" };
+                factory.Ssl.Enabled = true;
+                using (var connection = factory.CreateConnection())
+                using (var channel = connection.CreateModel())
+                {
+                    channel.QueueDeclare(queue: "CommandQueue",
+                                   durable: false,
+                                   exclusive: false,
+                                   autoDelete: false,
+                                   arguments: null);
 
-                var body = Encoding.UTF8.GetBytes(message);
+                    var body = Encoding.UTF8.GetBytes(message);
 
-                channel.BasicPublish(exchange: "",
-                               routingKey: "CommandQueue",
-                               basicProperties: null,
-                               body: body);
+                    channel.BasicPublish(exchange: "",
+                                   routingKey: "CommandQueue",
+                                   basicProperties: null,
+                                   body: body);
+
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error send message to queue: {e.Message}");
             }
         }
     }

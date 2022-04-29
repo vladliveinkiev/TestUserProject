@@ -27,7 +27,6 @@ namespace TestUserProject.Controllers
         [Route("getallusers")]
         public IActionResult GetAllUsers()
         {
-
             var allUsers = _userRepository.GetAllUsers();
 
             if (allUsers != null)
@@ -36,7 +35,7 @@ namespace TestUserProject.Controllers
                 return NotFound("No users in database");
         }
 
-        [SwaggerOperation(Summary = "Send a command to add new user into RabbitMq queue")]
+        [SwaggerOperation(Summary = "Send a command into RabbitMq queue for further user addition")]
         [SwaggerResponse(statusCode: 200, Description = "Command to add user was sent!")]
         [HttpPost]
         [Route("store")]
@@ -48,7 +47,7 @@ namespace TestUserProject.Controllers
             return Ok("Command to add user was sent!");
         }
 
-        [SwaggerOperation(Summary = "Create new user in database and send Command into RabbitMq queue")]
+        [SwaggerOperation(Summary = "Create new user in database and send ")]
         [SwaggerResponse(statusCode: 200, Description = "Return Guid of the created user")]
         [HttpPost]
         [Route("add")]

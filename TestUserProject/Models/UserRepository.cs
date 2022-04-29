@@ -11,19 +11,44 @@ namespace TestUserProject.Models
 
         public UserRepository (IMongoClient mongoClient)
         {
-            var db = mongoClient.GetDatabase("myFirstDatabase");
-            _users = db.GetCollection<User>(nameof(User));
+            try
+            {
+                var db = mongoClient.GetDatabase("myFirstDatabase");
+                _users = db.GetCollection<User>(nameof(User));
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error of connection to MongoDB:{e.Message}");
+            }
         }
 
         public async Task<Guid> CreateAsync(User user)
         {
-            await _users.InsertOneAsync(user);
-            return user.UserId;
+            var retv = Guid.Empty;
+            try
+            {
+                await _users.InsertOneAsync(user);
+                retv = user.UserId;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error of connection to MongoDB:{e.Message}");
+            }
+            return retv;
         }
 
-        public IEnumerable<User> GetAllUsers()
+        public List<User> GetAllUsers()
         {
-            return _users.Find(_ => true).ToEnumerable();
+            List<User> retv=new List<User>();
+            try
+            {
+                retv = _users.Find(_ => true).ToList();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error of connection to MongoDB:{e.Message}");
+            }
+            return retv;
         }
     }
 }

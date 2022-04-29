@@ -8,6 +8,6 @@ namespace TestUserProject.Models
     {
         public Task<Guid> CreateAsync(User user);
 
-        public IEnumerable<User> GetAllUsers();
+        public List<User> GetAllUsers();
     }
 }

@@ -19,7 +19,7 @@ namespace TestUserProject.Controllers
     [ApiController]
     public class AuthController : ControllerBase
     {
-        private readonly UserManager<MongoUser> _userManager;
+        private readonly UserManager<MongoUser> _userManager; 
         private readonly IConfiguration _configuration;
 
         public AuthController(UserManager<MongoUser> userManager, IConfiguration configuration)
@@ -28,12 +28,9 @@ namespace TestUserProject.Controllers
             _configuration = configuration;
         }
 
-        /// <summary>
-        /// Login user in system and returns token
-        /// </summary>
-        /// <returns></returns>
-        [SwaggerOperation(Summary = "Write your summary here")]
+        [SwaggerOperation(Summary = "Login into API with existing user")]
         [SwaggerResponse(statusCode:200, Description ="Return token for api authorization")]
+        [SwaggerResponse(statusCode: 404, Description = "User not found in the database")]
         [HttpPost]
         [Route("login")]
         public async Task<IActionResult> Login([FromBody] LoginUser model)
@@ -73,6 +70,10 @@ namespace TestUserProject.Controllers
                 return BadRequest("Token was not created. Try later...");
         }
 
+        [SwaggerOperation(Summary = "Cretes user for further login")]
+        [SwaggerResponse(statusCode: 200, Description = "User created successfully!")]
+        [SwaggerResponse(statusCode: 409, Description = "User already exists in the database")]
+        [SwaggerResponse(statusCode: 500, Description = "User not created due to internal errors")]
         [HttpPost]
         [Route("create")]
         public async Task<IActionResult> Create([FromBody] LoginUser model)

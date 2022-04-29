@@ -2,8 +2,7 @@
 using TestUserProject.Models;
 using Microsoft.AspNetCore.Authorization;
 using System.Threading.Tasks;
-
-// For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace TestUserProject.Controllers
 {
@@ -21,21 +20,43 @@ namespace TestUserProject.Controllers
             _rmqCommand = rmqCommand;
         }
 
+        [SwaggerOperation(Summary = "Get all users from database")]
+        [SwaggerResponse(statusCode: 200, Description = "Return token for api authorization")]
+        [SwaggerResponse(statusCode: 404, Description = "Users not found in the database")]
         [HttpGet]
         [Route("getallusers")]
         public IActionResult GetAllUsers()
         {
-            return Ok(_userRepository.GetAllUsers());
+
+            var allUsers = _userRepository.GetAllUsers();
+
+            if (allUsers != null)
+                return Ok(_userRepository.GetAllUsers());
+            else
+                return NotFound("No users in database");
         }
 
+        [SwaggerOperation(Summary = "Send a command to add new user into RabbitMq queue")]
+        [SwaggerResponse(statusCode: 200, Description = "Command to add user was sent!")]
         [HttpPost]
         [Route("store")]
-        public async Task<IActionResult> Store([FromBody] string user)
+        public IActionResult Store([FromBody] string user)
+        {
+            var userForInsert = new User { Name = user };
+            //var retv = await _userRepository.CreateAsync(userForInsert);
+            _rmqCommand.SendMessage(user);
+            return Ok("Command to add user was sent!");
+        }
+
+        [SwaggerOperation(Summary = "Create new user in database and send Command into RabbitMq queue")]
+        [SwaggerResponse(statusCode: 200, Description = "Return Guid of the created user")]
+        [HttpPost]
+        [Route("add")]
+        public async Task<IActionResult> Add([FromBody] string user)
         {
             var userForInsert = new User { Name = user };
             var retv = await _userRepository.CreateAsync(userForInsert);
-            _rmqCommand.SendMessage(user);
-            return Ok(retv);
+            return Ok(retv.ToString());
         }
     }
 }

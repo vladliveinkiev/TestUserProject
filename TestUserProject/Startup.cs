@@ -24,9 +24,9 @@ namespace TestUserProject
 
         public IConfiguration Configuration { get; }
 
-        // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            //addinf identity with MongoDB
             services.AddIdentityMongoDbProvider<MongoUser, MongoRole>(identity =>
             {
                 identity.Password.RequireDigit = false;
@@ -41,6 +41,8 @@ namespace TestUserProject
                      mongo.ConnectionString = Configuration.GetConnectionString("MongoDb");
                  }
              );
+
+            //Authentication with JWT token
             services.AddAuthentication(options =>
             {
                 options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -57,14 +59,18 @@ namespace TestUserProject
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["JWT:Secret"]))
                 };
             });
+            //MongoClient for data maniplation
             services.AddSingleton<IMongoClient, MongoClient>(sp => new MongoClient(Configuration.GetConnectionString("MongoDb")));
-            services.AddTransient<IUserRepository, UserRepository>();
-            services.AddTransient<IRabbitMqCommand, RabbitMqCommand>();
-            services.AddControllers();
+            //User repository for adding and exstraction of users
+            services.AddSingleton<IUserRepository, UserRepository>();
+            //rabbitmq manipulation
+            services.AddSingleton<IRabbitMqCommand, RabbitMqCommand>();
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "UserStore", Version = "v1"});
+                c.EnableAnnotations();
             });
+            services.AddControllers();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -75,17 +81,13 @@ namespace TestUserProject
                 app.UseDeveloperExceptionPage();
                 app.UseSwagger();
                 app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "UserStore v1"));
+                //logging all requests
+                app.UseSerilogRequestLogging();
             }
-
-            app.UseSerilogRequestLogging();
-
             app.UseHttpsRedirection();
-
             app.UseRouting();
-
             app.UseAuthentication();
             app.UseAuthorization();
-
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
